@@ -7,9 +7,8 @@ Created by Rongxin Fang
 
 import sys
 import numpy as np
-from operator import itemgetter 
-import pybedtools 
-import gzip 
+from operator import itemgetter
+import gzip
 import bz2
 from itertools import islice
 
@@ -41,71 +40,61 @@ def open_file(fname):
         fin = open(fname, 'r')
     return fin
 
-def next_n_lines(file_opened, N):
-    """
-    Read N lines at one time.
-    """
-    return [x for x in islice(file_opened, N)]
 
-def chunkIt(seq, num):
-    """
-    seperate the list into every two pair
-    i.g. [1,2,3,4,5,6,7,8] -> [[1,2], [3,4], [5,6], [7,8]]
-    every two read as a file
-    """
-    avg = len(seq) / float(num)
-    out = []
-    last = 0.0
-    while last < len(seq):
-        out.append(seq[int(last):int(last + avg)])
-        last += avg
-    return out
+def find_regions(peak_bed):
+    regions = []
+    with open(peak_bed) as fin:
+        for line in fin:
+            regions.append('\t'.join(line.split()[:3]))
+    return regions
+
+def find_barcode(barcode_txt):
+    barcodes = []
+    with open(barcode_txt) as fin:
+        for line in fin:
+            barcodes.append(line.strip().split()[0])
+    return barcodes
+
 
 def main():
+    '''
     from argparse import ArgumentParser
-    # parameters 
+    # parameters
     parser = ArgumentParser(description='generate binary accessibility matrix')
     parser.add_argument('-i', '--input', help='bed file contains read', required=True)
     parser.add_argument('-x', '--barcode', help='rows: file contains selected cell barcode', required=True)
     parser.add_argument('-y', '--peak', help='columns: file contains selected peaks', required=True)
     parser.add_argument('-o', '--output', help='output file', required=True)
     options = parser.parse_args()
+    '''
     # input parsing
+    '''
     read_bed = options.input
     peak_bed = options.peak
     barcode_txt = options.barcode
     output = options.output
-    # read peaks and reads
-    peaks = pybedtools.BedTool(peak_bed)
-    reads = pybedtools.BedTool(read_bed)
+    '''
 
-    # find overlap
-    ov = peaks.intersect(reads, wa=True,  wb=True)
-    
-    regions = {}
-    regions_rev = {}
-    barcodes = {}
-    barcodes_rev = {}
-    
-    i = 0; j = 0;
-    with open(peak_bed) as fin:
-        for line in fin:
-            regions['\t'.join(line.split()[:3])] = i
-            regions_rev[i] = '\t'.join(line.split()[:3])
-            i += 1
+    read_bed = "../data/p56.rep1.bed_100000"
+    # options.input
+    peak_bed = "../data/p56.rep1.ygi"
+    # options.peak
+    barcode_txt = "../data/p56.rep1.xgi"
 
-    with open(barcode_txt) as fin:
-        for line in fin:
-            cur_barcode = line.strip().split()[0]
-            barcodes[cur_barcode] = j
-            barcodes_rev[j] = cur_barcode
-            j += 1
+    regions = find_regions(peak_bed)
+    barcodes = find_barcode(barcode_txt)
 
-    mat = np.zeros((j, i))
+    # Initialize matrix based on the number of peaks & barcodes
+    matrix = np.zeros((len(barcodes), len(regions)))
 
-    peaks = pybedtools.BedTool(peak_bed)
-    
-    fin = open_file(read_bed)
+    f = open_file(read_bed)
+    line = f.readline()
+    while line:
+        chr,start_index,end_index,barcode = line.strip().split()
+        print(chr)
+        print(start_index,end_index,barcode)
+        line = f.readline()
+
     while True:
         chunk = next_n_lines(fin, CHUNK_SIZE)
         if(len(chunk) == 0): break
@@ -117,14 +106,12 @@ def main():
             if cur_barcode not in barcodes: continue
             if cur_region not in regions: sys.exit("error(main): region not in the list")
             mat[barcodes[cur_barcode], regions[cur_region]] += 1
-    fin.close()    
- 
+    fin.close()
+
     # convert the matrix to a binary matrix
-    mat[ np.where( mat > 1 ) ] = 1    
-    
-    np.savetxt(output, mat, delimiter='\t', fmt="%d")      
-    
+    mat[ np.where( mat > 1 ) ] = 1
+
+    #np.savetxt(output, mat, delimiter='\t', fmt="%d")
+
 if __name__ == '__main__':
     main()
-
-
