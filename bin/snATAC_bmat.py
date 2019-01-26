@@ -78,7 +78,7 @@ def main():
     # options.peak
     barcode_txt = "../data/p56.rep1.xgi"
     # options.barcode
-    output =  "result.txt"
+    output =  "result1.txt"
     #options.output
     # read peaks and reads
     peaks = pybedtools.BedTool(peak_bed)
@@ -113,19 +113,17 @@ def main():
     while True:
         chunk = next_n_lines(fin, CHUNK_SIZE)
         if(len(chunk) == 0): break
-        counter = update_matrix_with_chunk(chunk,regions,barcodes,peaks,counter)
+        update_matrix_with_chunk(chunk,regions,barcodes,peaks)
     fin.close()
 
     # convert the matrix to a binary matrix
     # mat[ np.where( mat > 1 ) ] = 1
 
-    #np.savetxt(output, mat, delimiter='\t', fmt="%d")
-
-    print(mat.sum())
-    print(counter)
+    np.savetxt(output, mat, delimiter='\t', fmt="%d")
 
 
-def update_matrix_with_chunk(chunk,regions,barcodes,peaks,counter):
+
+def update_matrix_with_chunk(chunk,regions,barcodes,peaks):
     reads = pybedtools.BedTool(chunk)
     for line in peaks.intersect(reads, wa=True, wb=True):
         elems = str(line).split()
@@ -133,9 +131,7 @@ def update_matrix_with_chunk(chunk,regions,barcodes,peaks,counter):
         cur_barcode = elems[6]
         if cur_barcode not in barcodes: continue
         if cur_region not in regions: sys.exit("error(main): region not in the list")
-        mat[barcodes[cur_barcode], regions[cur_region]] += 1
-        counter+=1
-    return counter
+        mat[barcodes[cur_barcode], regions[cur_region]] = 1
 
 
 if __name__ == '__main__':
