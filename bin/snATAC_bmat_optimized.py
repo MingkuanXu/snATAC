@@ -42,21 +42,61 @@ def open_file(fname):
 
 
 def find_regions(peak_bed):
+    """
+    Put each line of peak information into a list of tuples with the form of
+    [('chr','start_index','end_index'), ...] and return the list.
+    """
     regions = []
     with open(peak_bed) as fin:
         for line in fin:
-            regions.append('\t'.join(line.split()[:3]))
+            regions.append(line.split()[:3])
     return regions
 
+def build_chr_dic(regions):
+    """
+    Build a dictionary with chromosomes as its key and a list of tuple of start & end
+    indexes of a peak as its item. E.g.
+    chr_dic = {'chr1':[(0,80),(99,184), ...]
+               'chr2':[...]
+               ...}
+    """
+    chr_dic = {}
+    for each in regions:
+        if each[0] not in chr_dic:
+            chr_dic[each[0]] = []
+        chr_dic[each[0]].append((each[1],each[2]))
+    return chr_dic
+
 def find_barcode(barcode_txt):
+    """
+    Put each unique barcode into a list and return it.
+    """
     barcodes = []
     with open(barcode_txt) as fin:
         for line in fin:
-            barcodes.append(line.strip().split()[0])
+            barcodes.append(line.strip())
     return barcodes
 
+def find_region_index(start_index,end_index,chr,chr_dic):
+    """
+    For a read, determine if its start and end index is in the range of a peak.
+    If so, return the index of the peak it is in. Else, return -1.
+    """
+    if chr not in chr_dic:
+        return -1
+    all_regions = chr[dic]
+    for i in range(all_regions):
+        region_start = all_regions[i][0]
+        region_end = all_regions[i][1]
 
-def main():
+def next_n_lines(file_opened, N):
+    """
+    Read N lines at one time.
+    """
+    return [x for x in islice(file_opened, N)]
+
+
+def main(): 
     '''
     from argparse import ArgumentParser
     # parameters
@@ -83,6 +123,7 @@ def main():
 
     regions = find_regions(peak_bed)
     barcodes = find_barcode(barcode_txt)
+    chr_dic = build_chr_dic(regions)
 
     # Initialize matrix based on the number of peaks & barcodes
     matrix = np.zeros((len(barcodes), len(regions)))
@@ -91,27 +132,27 @@ def main():
     line = f.readline()
     while line:
         chr,start_index,end_index,barcode = line.strip().split()
-        print(chr)
-        print(start_index,end_index,barcode)
+        if barcode not in barcodes:
+            # The current barcode is not found in the barcode list
+            line = f.readline()
+            continue
+
+        barcode_index = barcodes.find(barcode)
+        region_index = find_region_index(start_index,end_index,chr,chr_dic)
+        if region_index != -1:
+            matrix[barcode_index,region_index] +=1
         line = f.readline()
 
-    while True:
-        chunk = next_n_lines(fin, CHUNK_SIZE)
-        if(len(chunk) == 0): break
-        reads = pybedtools.BedTool(chunk)
-        for line in peaks.intersect(reads, wa=True, wb=True):
-            elems = str(line).split()
-            cur_region = '\t'.join(elems[:3])
-            cur_barcode = elems[6]
-            if cur_barcode not in barcodes: continue
-            if cur_region not in regions: sys.exit("error(main): region not in the list")
-            mat[barcodes[cur_barcode], regions[cur_region]] += 1
-    fin.close()
+    f.close()
 
     # convert the matrix to a binary matrix
     mat[ np.where( mat > 1 ) ] = 1
 
     #np.savetxt(output, mat, delimiter='\t', fmt="%d")
+    total = 0
+    for each in mat:
+        total += sum(each)
+    print(total) # should be 5952
 
 if __name__ == '__main__':
     main()

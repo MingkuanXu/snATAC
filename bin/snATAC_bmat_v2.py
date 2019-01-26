@@ -15,7 +15,7 @@ from itertools import islice
 
 # process one million reads at a time
 CHUNK_SIZE=1000000
-mat = np.zeros((0, 0))
+coordinates = set()
 
 magic_dict = {
     "\x1f\x8b\x08": "gz",
@@ -48,19 +48,15 @@ def next_n_lines(file_opened, N):
     """
     return [x for x in islice(file_opened, N)]
 
-def chunkIt(seq, num):
-    """
-    seperate the list into every two pair
-    i.g. [1,2,3,4,5,6,7,8] -> [[1,2], [3,4], [5,6], [7,8]]
-    every two read as a file
-    """
-    avg = len(seq) / float(num)
-    out = []
-    last = 0.0
-    while last < len(seq):
-        out.append(seq[int(last):int(last + avg)])
-        last += avg
-    return out
+def find_coordinates(chunk,peaks,regions,barcodes):
+    reads = pybedtools.BedTool(chunk)
+    for line in peaks.intersect(reads, wa=True, wb=True):
+        elems = str(line).split()
+        cur_region = '\t'.join(elems[:3])
+        cur_barcode = elems[6]
+        if cur_barcode not in barcodes: continue
+        if cur_region not in regions: sys.exit("error(main): region not in the list")
+        coordinates.add((barcodes[cur_barcode], regions[cur_region]))
 
 def main():
     from argparse import ArgumentParser
@@ -102,40 +98,22 @@ def main():
             barcodes[cur_barcode] = j
             j += 1
 
-    global mat
-    mat = np.zeros((j, i))
 
     peaks = pybedtools.BedTool(peak_bed)
 
-
-    counter = 0
     fin = open_file(read_bed)
     while True:
+        # chunk1 = next_n_lines(fin, CHUNK_SIZE)
         chunk = next_n_lines(fin, CHUNK_SIZE)
         if(len(chunk) == 0): break
-        counter = update_matrix_with_chunk(chunk,regions,barcodes,peaks,counter)
+        find_coordinates(chunk,peaks,regions,barcodes)
+
     fin.close()
 
-    # convert the matrix to a binary matrix
-    # mat[ np.where( mat > 1 ) ] = 1
 
     #np.savetxt(output, mat, delimiter='\t', fmt="%d")
 
-    print(mat.sum())
-    print(counter)
-
-
-def update_matrix_with_chunk(chunk,regions,barcodes,peaks,counter):
-    reads = pybedtools.BedTool(chunk)
-    for line in peaks.intersect(reads, wa=True, wb=True):
-        elems = str(line).split()
-        cur_region = '\t'.join(elems[:3])
-        cur_barcode = elems[6]
-        if cur_barcode not in barcodes: continue
-        if cur_region not in regions: sys.exit("error(main): region not in the list")
-        mat[barcodes[cur_barcode], regions[cur_region]] += 1
-        counter+=1
-    return counter
+    print(len(coordinates))
 
 
 if __name__ == '__main__':
