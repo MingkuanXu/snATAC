@@ -97,21 +97,17 @@ def update_matrix_with_coordinates(coordinates,i,j):
 def main():
     from argparse import ArgumentParser
     # parameters
-    # parser = ArgumentParser(description='generate binary accessibility matrix')
-    # parser.add_argument('-i', '--input', help='bed file contains read', required=True)
-    # parser.add_argument('-x', '--barcode', help='rows: file contains selected cell barcode', required=True)
-    # parser.add_argument('-y', '--peak', help='columns: file contains selected peaks', required=True)
-    # parser.add_argument('-o', '--output', help='output file', required=True)
-    # options = parser.parse_args()
+    parser = ArgumentParser(description='generate binary accessibility matrix')
+    parser.add_argument('-i', '--input', help='bed file contains read', required=True)
+    parser.add_argument('-x', '--barcode', help='rows: file contains selected cell barcode', required=True)
+    parser.add_argument('-y', '--peak', help='columns: file contains selected peaks', required=True)
+    parser.add_argument('-o', '--output', help='output file', required=True)
+    options = parser.parse_args()
     # input parsing
-    read_bed = "../data/p56.rep1.bed_100000"
-    # options.input
-    peak_bed = "../data/p56.rep1.ygi"
-    # options.peak
-    barcode_txt = "../data/p56.rep1.xgi"
-    # options.barcode
-    output =  "result.txt"
-    #options.output
+    read_bed = options.input
+    peak_bed = options.peak
+    barcode_txt = options.barcode
+    output =  options.output
 
     # read peaks and reads
     peaks = pybedtools.BedTool(peak_bed)
