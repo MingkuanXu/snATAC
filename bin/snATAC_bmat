@@ -105,6 +105,7 @@ def number_of_lines(filename):
 def main():
     from argparse import ArgumentParser
 
+    """
     # parameters
     parser = ArgumentParser(description='generate binary accessibility matrix')
     parser.add_argument('-i', '--input', help='bed file contains read', required=True)
@@ -120,17 +121,20 @@ def main():
     output =  options.output
     """
 
+
+
+
     read_bed = "../data/p56.rep1.bed_100000"
     # options.input
     peak_bed = "../data/p56.rep1.ygi"
     # options.peak
     barcode_txt = "../data/p56.rep1.xgi"
-    """
+
 
     # read peaks and reads
     peaks = pybedtools.BedTool(peak_bed)
     reads = pybedtools.BedTool(read_bed)
-    print("Files for peaks and reads have been successfully loaded.\n")
+    print("\n\nFiles for peaks and reads have been successfully loaded.\n")
 
     # create hash tables for peaks and barcodes
     barcodes = create_barcode_hash(barcode_txt)
@@ -147,13 +151,17 @@ def main():
         # chunk1 = next_n_lines(fin, CHUNK_SIZE)
         chunk1 = next_n_lines(fin, CHUNK_SIZE)
         lines_read+=len(chunk1)
+        # print("The length of the current chunk is %d" % len(chunk1))
         if(len(chunk1) == 0): break
+        if(lines_read>total_lines):
+            print("Lines read is more than total lines.")
+            print(chunk1[0:5])
         find_coordinates(chunk1,peaks,regions,barcodes)
 
         # t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
         # t1.start()
-
-        print("%.1f%% lines have been read. %s" % (lines_read/total_lines*100,ctime()))
+        print("Current chunk size = %d"%len(chunk1))
+        print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
 
         """
         chunk2 = next_n_lines(fin, CHUNK_SIZE)
