@@ -146,66 +146,65 @@ def main():
     print("Start reading lines ...\n")
     lines_read = 0
 
-    """
-    while True:
-        # chunk1 = next_n_lines(fin, CHUNK_SIZE)
-        chunk1 = next_n_lines(fin, CHUNK_SIZE)
-        lines_read+=len(chunk1)
-        # print("The length of the current chunk is %d" % len(chunk1))
-        if(len(chunk1) == 0): break
-        if(lines_read>total_lines):
-            print("Lines read is more than total lines.")
-            print(chunk1[0:5])
-        find_coordinates(chunk1,peaks,regions,barcodes)
-
-        # t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
-        # t1.start()
-        print("Current chunk size = %d"%len(chunk1))
-        print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
-        """
-
-        """
-        chunk2 = next_n_lines(fin, CHUNK_SIZE)
-        if(len(chunk2) == 0): break
-        # find_coordinates(chunk1,peaks,regions,barcodes)
-        t2 = threading.Thread(target = find_coordinates,args=(chunk2,peaks,regions,barcodes,))
-        t2.start()
-
-
-        chunk3 = next_n_lines(fin, CHUNK_SIZE)
-        if(len(chunk3) == 0): break
-        # find_coordinates(chunk1,peaks,regions,barcodes)
-        t3 = threading.Thread(target = find_coordinates,args=(chunk3,peaks,regions,barcodes,))
-        t3.start()
-        """
-
-        """
-        if(threading.activeCount()>MAX_THREAD):
-            print("Reach the maximal number of threads: %d" % threading.activeCount())
-            t1.join()
-        else:
-            print("Number of threads reaches %d" % threading.activeCount())
-        """
-
-
-    fin.close()
-    # t1.join()
-    # t2.join()
-    # t3.join()
-
-    print("\n\nAll coordinates have been found! %s" % ctime())
-    print("Start updating binary matrix...")
-
-    """
-    matrix = update_matrix_with_coordinates(coordinates,len(regions),len(barcodes))
-
-    print("\n\nBinary matrix finished! %s" % ctime())
-    print("Start writing into the output file...")
-
-    # print(matrix.sum())
-    np.savetxt(output, matrix, delimiter='\t', fmt="%d")
-    """
-    print("\n\nCompleted! %s" % ctime())
+    # while True:
+    #     # chunk1 = next_n_lines(fin, CHUNK_SIZE)
+    #     chunk1 = next_n_lines(fin, CHUNK_SIZE)
+    #     lines_read+=len(chunk1)
+    #     # print("The length of the current chunk is %d" % len(chunk1))
+    #     if(len(chunk1) == 0): break
+    #     if(lines_read>total_lines):
+    #         print("Lines read is more than total lines.")
+    #         print(chunk1[0:5])
+    #     find_coordinates(chunk1,peaks,regions,barcodes)
+    #
+    #     # t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
+    #     # t1.start()
+    #     print("Current chunk size = %d"%len(chunk1))
+    #     print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
+    #
+    #
+    #     """
+    #     chunk2 = next_n_lines(fin, CHUNK_SIZE)
+    #     if(len(chunk2) == 0): break
+    #     # find_coordinates(chunk1,peaks,regions,barcodes)
+    #     t2 = threading.Thread(target = find_coordinates,args=(chunk2,peaks,regions,barcodes,))
+    #     t2.start()
+    #
+    #
+    #     chunk3 = next_n_lines(fin, CHUNK_SIZE)
+    #     if(len(chunk3) == 0): break
+    #     # find_coordinates(chunk1,peaks,regions,barcodes)
+    #     t3 = threading.Thread(target = find_coordinates,args=(chunk3,peaks,regions,barcodes,))
+    #     t3.start()
+    #     """
+    #
+    #     """
+    #     if(threading.activeCount()>MAX_THREAD):
+    #         print("Reach the maximal number of threads: %d" % threading.activeCount())
+    #         t1.join()
+    #     else:
+    #         print("Number of threads reaches %d" % threading.activeCount())
+    #     """
+    #
+    #
+    # fin.close()
+    # # t1.join()
+    # # t2.join()
+    # # t3.join()
+    #
+    # print("\n\nAll coordinates have been found! %s" % ctime())
+    # print("Start updating binary matrix...")
+    #
+    # """
+    # matrix = update_matrix_with_coordinates(coordinates,len(regions),len(barcodes))
+    #
+    # print("\n\nBinary matrix finished! %s" % ctime())
+    # print("Start writing into the output file...")
+    #
+    # # print(matrix.sum())
+    # np.savetxt(output, matrix, delimiter='\t', fmt="%d")
+    # """
+    # print("\n\nCompleted! %s" % ctime())
 
 
 if __name__ == '__main__':
