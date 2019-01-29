@@ -105,7 +105,6 @@ def number_of_lines(filename):
 def main():
     from argparse import ArgumentParser
 
-    """
     # parameters
     parser = ArgumentParser(description='generate binary accessibility matrix')
     parser.add_argument('-i', '--input', help='bed file contains read', required=True)
@@ -119,16 +118,16 @@ def main():
     peak_bed = options.peak
     barcode_txt = options.barcode
     output =  options.output
+
+
+
     """
-
-
-
-
     read_bed = "../data/p56.rep1.bed_100000"
     # options.input
     peak_bed = "../data/p56.rep1.ygi"
     # options.peak
     barcode_txt = "../data/p56.rep1.xgi"
+    """
 
 
     # read peaks and reads
