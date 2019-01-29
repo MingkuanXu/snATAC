@@ -19,7 +19,7 @@ from time import ctime, sleep
 CHUNK_SIZE = 1000000
 # CHUNK_SIZE = 10000
 coordinates = set()
-MAX_THREAD = 120
+MAX_THREAD = 120 * 100
 
 magic_dict = {
     "\x1f\x8b\x08": "gz",
