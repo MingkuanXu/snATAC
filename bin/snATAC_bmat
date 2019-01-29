@@ -16,8 +16,8 @@ import threading
 from time import ctime, sleep
 
 # process one million reads at a time
-# CHUNK_SIZE = 1000000
-CHUNK_SIZE = 10000
+CHUNK_SIZE = 1000000
+# CHUNK_SIZE = 10000
 coordinates = set()
 MAX_THREAD = 200
 
@@ -103,6 +103,7 @@ def main():
     parser.add_argument('-y', '--peak', help='columns: file contains selected peaks', required=True)
     parser.add_argument('-o', '--output', help='output file', required=True)
     options = parser.parse_args()
+
     # input parsing
     read_bed = options.input
     peak_bed = options.peak
@@ -135,6 +136,7 @@ def main():
         t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
         t1.start()
 
+
         chunk2 = next_n_lines(fin, CHUNK_SIZE)
         if(len(chunk2) == 0): break
         # find_coordinates(chunk1,peaks,regions,barcodes)
@@ -161,7 +163,7 @@ def main():
 
     matrix = update_matrix_with_coordinates(coordinates,len(regions),len(barcodes))
 
-    # print(matrix.sum())
+    #print(matrix.sum())
     np.savetxt(output, matrix, delimiter='\t', fmt="%d")
 
 if __name__ == '__main__':
