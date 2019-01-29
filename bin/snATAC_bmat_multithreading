@@ -12,15 +12,14 @@ import pybedtools
 import gzip
 import bz2
 from itertools import islice
-import multiprocessing
+import threading
 from time import ctime, sleep
 
 # process one million reads at a time
 # CHUNK_SIZE = 1000000
 CHUNK_SIZE = 100000
-manager = multiprocessing.Manager()
-coordinates = manager.list()
-MAX_CPU = 200
+coordinates = set()
+MAX_THREAD = 200
 
 magic_dict = {
     "\x1f\x8b\x08": "gz",
@@ -62,7 +61,7 @@ def find_coordinates(chunk,peaks,regions,barcodes):
         cur_barcode = elems[6]
         if cur_barcode not in barcodes: continue
         if cur_region not in regions: sys.exit("error(main): region not in the list")
-        coordinates.append((barcodes[cur_barcode], regions[cur_region]))
+        coordinates.add((barcodes[cur_barcode], regions[cur_region]))
 
 def create_barcode_hash(barcode_txt):
     """
@@ -105,7 +104,7 @@ def number_of_lines(f):
 
 def main():
     from argparse import ArgumentParser
-
+    """
     # parameters
     parser = ArgumentParser(description='generate binary accessibility matrix')
     parser.add_argument('-i', '--input', help='bed file contains read', required=True)
@@ -119,12 +118,18 @@ def main():
     peak_bed = options.peak
     barcode_txt = options.barcode
     output =  options.output
+    """
 
-    # read_bed = "../data/p56.rep1.bed_100000"
-    # # options.input
-    # peak_bed = "../data/p56.rep1.ygi"
-    # # options.peak
-    # barcode_txt = "../data/p56.rep1.xgi"
+
+
+
+    read_bed = "../data/p56.rep1.bed_100000"
+    # options.input
+    peak_bed = "../data/p56.rep1.ygi"
+    # options.peak
+    barcode_txt = "../data/p56.rep1.xgi"
+
+
 
     # read peaks and reads
     peaks = pybedtools.BedTool(peak_bed)
@@ -136,14 +141,11 @@ def main():
     regions = create_region_hash(peak_bed)
     print("Hash tables have been successfully created.\n")
 
-    """
     fin = open_file(read_bed)
     total_lines = number_of_lines(fin)
     fin.close()
     print("There are %d lines in the read_bed file." % total_lines)
     print("Start reading lines ...\n")
-    """
-    total_lines = 52038641
 
     fin = open_file(read_bed)
     lines_read = 0
@@ -154,16 +156,14 @@ def main():
         lines_read+=len(chunk1)
         # print("The length of the current chunk is %d" % len(chunk1))
         if(len(chunk1) == 0): break
-        #find_coordinates(chunk1,peaks,regions,barcodes)
+        if(lines_read>total_lines):
+            print("Lines read is more than total lines.")
+            print(chunk1[0:5])
+        # find_coordinates(chunk1,peaks,regions,barcodes)
 
-        # t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
-        # t1.start()
-        p1 = multiprocessing.Process(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
-        p1.start()
-
-        # for p in multiprocessing.active_children():
-        #     print("child   p.name:" + p.name + "\tp.id" + str(p.pid))
-
+        t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
+        t1.start()
+        print("Current chunk size = %d"%len(chunk1))
         print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
 
 
@@ -182,30 +182,32 @@ def main():
         t3.start()
         """
 
-
-        if(len(multiprocessing.active_children())>MAX_CPU):
-            print("Reach the maximal number of CPU: %d" % len(multiprocessing.active_children()))
+        """
+        if(threading.activeCount()>MAX_THREAD):
+            print("Reach the maximal number of threads: %d" % threading.activeCount())
             t1.join()
-
+        else:
+            print("Number of threads reaches %d" % threading.activeCount())
+        """
 
 
     fin.close()
-    p1.join()
-    # t1.join()
+    t1.join()
     # t2.join()
     # t3.join()
+
     print("\n\nAll coordinates have been found! %s" % ctime())
     print("Start updating binary matrix...")
 
-
-    matrix = update_matrix_with_coordinates(set(coordinates),len(regions),len(barcodes))
+    """
+    matrix = update_matrix_with_coordinates(coordinates,len(regions),len(barcodes))
 
     print("\n\nBinary matrix finished! %s" % ctime())
     print("Start writing into the output file...")
 
-    print(matrix.sum())
+    # print(matrix.sum())
     np.savetxt(output, matrix, delimiter='\t', fmt="%d")
-
+    """
     print("\n\nCompleted! %s" % ctime())
 
 
