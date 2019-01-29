@@ -17,7 +17,7 @@ from time import ctime, sleep
 
 # process one million reads at a time
 # CHUNK_SIZE = 1000000
-CHUNK_SIZE = 400000
+CHUNK_SIZE = 300000
 manager = multiprocessing.Manager()
 coordinates = manager.list()
 MAX_CPU = 200
@@ -105,7 +105,7 @@ def number_of_lines(f):
 
 def main():
     from argparse import ArgumentParser
-
+    """
     # parameters
     parser = ArgumentParser(description='generate binary accessibility matrix')
     parser.add_argument('-i', '--input', help='bed file contains read', required=True)
@@ -119,12 +119,13 @@ def main():
     peak_bed = options.peak
     barcode_txt = options.barcode
     output =  options.output
+    """
 
-    # read_bed = "../data/p56.rep1.bed_100000"
-    # # options.input
-    # peak_bed = "../data/p56.rep1.ygi"
-    # # options.peak
-    # barcode_txt = "../data/p56.rep1.xgi"
+    read_bed = "../data/p56.rep1.bed_100000"
+    # options.input
+    peak_bed = "../data/p56.rep1.ygi"
+    # options.peak
+    barcode_txt = "../data/p56.rep1.xgi"
 
     # read peaks and reads
     peaks = pybedtools.BedTool(peak_bed)
@@ -148,52 +149,33 @@ def main():
     fin = open_file(read_bed)
     lines_read = 0
 
+    pool = multiprocessing.Pool(processes = MAX_CPU)
+
     while True:
-        # chunk1 = next_n_lines(fin, CHUNK_SIZE)
         chunk1 = next_n_lines(fin, CHUNK_SIZE)
         lines_read+=len(chunk1)
         # print("The length of the current chunk is %d" % len(chunk1))
         if(len(chunk1) == 0): break
         #find_coordinates(chunk1,peaks,regions,barcodes)
-
-        # t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
-        # t1.start()
-        p1 = multiprocessing.Process(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
-        p1.start()
+        pool.apply_async(find_coordinates,(chunk1,peaks,regions,barcodes,))
+        # p1 = multiprocessing.Process(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
+        # p1.start()
 
         # for p in multiprocessing.active_children():
         #     print("child   p.name:" + p.name + "\tp.id" + str(p.pid))
 
-        print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
+        # print("%3.1f%% lines have been read. %s\n" % (lines_read*1.0/total_lines*100,ctime()))
 
+        # if(len(multiprocessing.active_children())>MAX_CPU):
+        #     print("Reach the maximal number of CPU: %d" % len(multiprocessing.active_children()))
+        #     p1.join()
 
-        """
-        chunk2 = next_n_lines(fin, CHUNK_SIZE)
-        if(len(chunk2) == 0): break
-        # find_coordinates(chunk1,peaks,regions,barcodes)
-        t2 = threading.Thread(target = find_coordinates,args=(chunk2,peaks,regions,barcodes,))
-        t2.start()
-
-
-        chunk3 = next_n_lines(fin, CHUNK_SIZE)
-        if(len(chunk3) == 0): break
-        # find_coordinates(chunk1,peaks,regions,barcodes)
-        t3 = threading.Thread(target = find_coordinates,args=(chunk3,peaks,regions,barcodes,))
-        t3.start()
-        """
-
-
-        if(len(multiprocessing.active_children())>MAX_CPU):
-            print("Reach the maximal number of CPU: %d" % len(multiprocessing.active_children()))
-            p1.join()
-
-
-
+    pool.close()
     fin.close()
-    p1.join()
-    # t1.join()
-    # t2.join()
-    # t3.join()
+    print("All lines have been loaded. Finding coordinates...\n")
+
+    # p1.join()
+    pool.join()
     print("\n\nAll coordinates have been found! %s" % ctime())
     print("Start updating binary matrix...")
 
@@ -204,7 +186,7 @@ def main():
     print("Start writing into the output file...")
 
     print(matrix.sum())
-    np.savetxt(output, matrix, delimiter='\t', fmt="%d")
+    # np.savetxt(output, matrix, delimiter='\t', fmt="%d")
 
     print("\n\nCompleted! %s" % ctime())
 
