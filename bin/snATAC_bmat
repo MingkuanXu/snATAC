@@ -19,7 +19,7 @@ from time import ctime, sleep
 CHUNK_SIZE = 1000000
 # CHUNK_SIZE = 10000
 coordinates = set()
-MAX_THREAD = 120 * 100
+MAX_THREAD = 600
 
 magic_dict = {
     "\x1f\x8b\x08": "gz",
@@ -127,8 +127,10 @@ def main():
         t1 = threading.Thread(target = find_coordinates,args=(chunk1,peaks,regions,barcodes,))
         t1.start()
         if(threading.activeCount()>MAX_THREAD):
+            print("Reach the maximal number of threads: %d" % threading.activeCount())
             t1.join()
-        # print("Current threading is %d" % threading.activeCount())
+        elif(threading.activeCount()%100):
+            print("Number of threads reaches %d" % threading.activeCount())
 
     fin.close()
     t1.join()
