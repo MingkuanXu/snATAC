@@ -95,11 +95,11 @@ def update_matrix_with_coordinates(coordinates,i,j):
     return mat
 
 
-def number_of_lines(filename):
+def number_of_lines(f):
     """
     Return number of lines in a file.
     """
-    return sum(1 for line in open(filename))
+    return sum(1 for line in f)
 
 
 def main():
@@ -141,9 +141,12 @@ def main():
     print("Hash tables have been successfully created.\n")
 
     fin = open_file(read_bed)
-    total_lines = number_of_lines(read_bed)
+    total_lines = number_of_lines(fin)
+    fin.close()
     print("There are %d lines in the read_bed file." % total_lines)
     print("Start reading lines ...\n")
+
+    fin = open_file(read_bed)
     lines_read = 0
 
     # while True:
